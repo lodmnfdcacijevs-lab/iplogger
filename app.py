@@ -30,7 +30,7 @@ def gui_tele(IP, UA, VITRI_IP, VITRI_GPS="Chưa bật GPS"):
             data={"chat_id": CHAT_ID, "text": text, "disable_web_page_preview": True},
             timeout=10
         )
-        print("✅ TELEGRAM OK |", r.status_code)
+        print("✅ TELEGRAM OK | Status:", r.status_code)
         return True
     except Exception as e:
         print("❌ LỖI TELEGRAM |", type(e).__name__, str(e))
@@ -155,5 +155,5 @@ def save_gps():
     return "OK"
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(__import__('os').getenv('PORT', 10000)))
+    app.run(host='0.0.0.0', port=int(__import__('os').getenv('PORT', 5000)))
     
