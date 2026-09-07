@@ -1,5 +1,5 @@
-from flask import Flask,request,os
-import requests
+from flask import Flask,request
+import os, requests
 
 # ⚠️ ĐIỀN THÔNG TIN TELEGRAM CỦA BẠN
 BOT_TOKEN = "8691955774:AAHqYfpwCRY1w72HgsEZFn0HipXj6F_1zag"
