@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: iplogger
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: TELEGRAM_TOKEN
+        value: 8691955774:AAHqYfpwCRY1w72HgsEZFn0HipXj6F_1zag
+      - key: TELEGRAM_CHAT_ID
+        value: iplogger_HaiNguyen_bot
+      - key: YOUTUBE_VIDEO_ID
+        value: dQw4w9WgXcQ
